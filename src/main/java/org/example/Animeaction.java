@@ -1,13 +1,16 @@
 package org.example;
 
 import java.util.*;
+import java.nio.file.*;
+import java.io.IOException;
+import java.util.stream.Collectors;
 
 public class Animeaction {
+    private static final Path PATH = Paths.get("anime_data.txt");
     private class Animenation {
         private String name;
         private int lovepoint;
 
-        // 构造函数可以设为 private（如果是单例）或包访问权限
         Animenation(String name, int lovepoint) {
             this.name = name;
             this.lovepoint = lovepoint;
@@ -27,11 +30,44 @@ public class Animeaction {
             return "名称: " + name + ", 好感度: " + lovepoint;
         }
     }
-    private List<Animenation> list = new ArrayList<>();
-    private Scanner input = new Scanner(System.in);
+    List<Animenation> list = new ArrayList<>();
+
+    private void loadFromFile() {
+        if (!Files.exists(PATH)) return; // 如果文件不存在，直接返回空列表
+        try {
+            List<String> lines = Files.readAllLines(PATH);
+            for (String line : lines) {
+                String[] parts = line.split(",");
+                if (parts.length == 2) {
+                    list.add(new Animenation(parts[0], Integer.parseInt(parts[1])));
+                }
+            }
+            System.out.println(">>> 已从磁盘加载 " + list.size() + " 条数据");
+        } catch (IOException e) {
+            System.out.println("加载失败: " + e.getMessage());
+        }
+    }
+    private void saveToFile() {
+        try {
+            // 将对象列表转为字符串列表：["Clannad,100", "Fate,90"]
+            List<String> lines = list.stream()
+                    .map(a -> a.getName() + "," + a.getLovepoint())
+                    .collect(Collectors.toList());
+
+            // 写入文件，如果存在则覆盖
+            Files.write(PATH, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            System.out.println(">>> 数据已安全保存至磁盘");
+        } catch (IOException e) {
+            System.out.println("保存失败: " + e.getMessage());
+        }
+    }
+
 
 
     public void start() {
+        loadFromFile(); // 程序一启动，先读档
+        Scanner input = new Scanner(System.in);
+
         System.out.println("你喜欢的动漫有什么？你分别为他们打多少分？");
         System.out.println("请输入指令：new，end，remove");
 
@@ -74,6 +110,7 @@ public class Animeaction {
                     }
                     break;
                 case "end":
+                    saveToFile(); // 用户输入 end 时，存档
                     break label;
                 default:
                     System.out.println("请重新输入指令");
@@ -84,8 +121,7 @@ public class Animeaction {
 
 
         list.sort((Comparator.comparingInt((Animenation a) -> a.lovepoint)).reversed());
-        for (Animenation a : list) {
-            System.out.println(a);
-        }
+        list.forEach(System.out::println);
+
     }
 }
