@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 public class Animeaction {
-    private static final Path PATH = Paths.get("anime_data.txt");
+
     private class Animenation {
         private String name;
         private int lovepoint;
@@ -16,7 +16,6 @@ public class Animeaction {
             this.lovepoint = lovepoint;
         }
 
-        // 2. 提供公共的读取方法（即使是 private 类，好的习惯也是通过方法访问）
         public String getName() {
             return name;
         }
@@ -30,10 +29,13 @@ public class Animeaction {
             return "名称: " + name + ", 好感度: " + lovepoint;
         }
     }
+
+    private static final Path PATH = Paths.get("anime_data.txt");
+
     List<Animenation> list = new ArrayList<>();
 
-    private void loadFromFile() {
-        if (!Files.exists(PATH)) return; // 如果文件不存在，直接返回空列表
+    private void loadFile() {
+        if (!Files.exists(PATH)) return;
         try {
             List<String> lines = Files.readAllLines(PATH);
             for (String line : lines) {
@@ -47,12 +49,10 @@ public class Animeaction {
             System.out.println("加载失败: " + e.getMessage());
         }
     }
-    private void saveToFile() {
+    private void saveFile() {
         try {
 
-            List<String> lines = list.stream()
-                    .map(a -> a.getName() + "," + a.getLovepoint())
-                    .collect(Collectors.toList());
+            List<String> lines = list.stream().map( a -> a.getName() +","+a.getLovepoint()).collect(Collectors.toList());
 
 
             Files.write(PATH, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
@@ -65,7 +65,7 @@ public class Animeaction {
 
 
     public void start() {
-        loadFromFile();
+        loadFile();
         Scanner input = new Scanner(System.in);
 
         System.out.println("你喜欢的动漫有什么？你分别为他们打多少分？");
@@ -110,7 +110,7 @@ public class Animeaction {
                     }
                     break;
                 case "end":
-                    saveToFile(); // 用户输入 end 时，存档
+                    saveFile(); // 用户输入 end 时，存档
                     break label;
                 default:
                     System.out.println("请重新输入指令");
